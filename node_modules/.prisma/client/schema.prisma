@@ -1,0 +1,1279 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model address {
+  address_id                                               BigInt            @id(map: "pk_address") @default(autoincrement())
+  address_type_id                                          Int
+  is_default                                               Boolean           @default(false)
+  country_id                                               Int
+  state_id                                                 Int?
+  city_id                                                  Int?
+  area_id                                                  Int?
+  postal_code                                              String?           @db.VarChar(20)
+  created_at                                               DateTime          @default(now()) @db.Timestamptz(6)
+  created_by                                               BigInt?
+  updated_at                                               DateTime          @default(now()) @db.Timestamptz(6)
+  updated_by                                               BigInt?
+  deleted_at                                               DateTime?         @db.Timestamptz(6)
+  deleted_by                                               BigInt?
+  address_text                                             String            @db.VarChar(512)
+  parameter                                                parameter         @relation(fields: [address_type_id], references: [parameter_id], onUpdate: NoAction, map: "fk_address_address_type_id")
+  area                                                     area?             @relation(fields: [area_id], references: [area_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_address_area_id")
+  city                                                     city?             @relation(fields: [city_id], references: [city_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_address_city_id")
+  country                                                  country           @relation(fields: [country_id], references: [country_id], onUpdate: NoAction, map: "fk_address_country_id")
+  app_user_address_created_byToapp_user                    app_user?         @relation("address_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_address_created_by")
+  app_user_address_deleted_byToapp_user                    app_user?         @relation("address_deleted_byToapp_user", fields: [deleted_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_address_deleted_by")
+  state                                                    state?            @relation(fields: [state_id], references: [state_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_address_state_id")
+  app_user_address_updated_byToapp_user                    app_user?         @relation("address_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_address_updated_by")
+  company_company_address_idToaddress                      company[]         @relation("company_address_idToaddress")
+  organization                                             organization[]
+  profile_profile_address_idToaddress                      profile[]         @relation("profile_address_idToaddress")
+  service_request_service_request_from_address_idToaddress service_request[] @relation("service_request_from_address_idToaddress")
+  service_request_service_request_to_address_idToaddress   service_request[] @relation("service_request_to_address_idToaddress")
+
+  @@index([address_type_id], map: "ix_address_address_type_id")
+  @@index([area_id], map: "ix_address_area_id")
+  @@index([city_id], map: "ix_address_city_id")
+  @@index([country_id], map: "ix_address_country_id")
+  @@index([state_id], map: "ix_address_state_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model app_user {
+  user_id                                                                BigInt                     @id(map: "pk_app_user") @default(autoincrement())
+  public_id                                                              String                     @unique(map: "uq_app_user_public_id") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profile_id                                                             BigInt                     @unique(map: "uq_app_user_profile_id")
+  username                                                               String                     @unique(map: "uq_app_user_username") @db.Citext
+  password_hash                                                          String                     @db.VarChar(255)
+  password_changed_at                                                    DateTime?                  @db.Timestamptz(6)
+  role_id                                                                Int
+  failed_login_count                                                     Int                        @default(0) @db.SmallInt
+  locked_until                                                           DateTime?                  @db.Timestamptz(6)
+  last_login_at                                                          DateTime?                  @db.Timestamptz(6)
+  last_login_ip                                                          String?                    @db.Inet
+  created_at                                                             DateTime                   @default(now()) @db.Timestamptz(6)
+  created_by                                                             BigInt?
+  updated_at                                                             DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_by                                                             BigInt?
+  deleted_at                                                             DateTime?                  @db.Timestamptz(6)
+  deleted_by                                                             BigInt?
+  row_version                                                            Int                        @default(1)
+  can_sign_in                                                            Boolean                    @default(true)
+  can_login                                                              Boolean                    @default(true)
+  address_address_created_byToapp_user                                   address[]                  @relation("address_created_byToapp_user")
+  address_address_deleted_byToapp_user                                   address[]                  @relation("address_deleted_byToapp_user")
+  address_address_updated_byToapp_user                                   address[]                  @relation("address_updated_byToapp_user")
+  app_user_app_user_created_byToapp_user                                 app_user?                  @relation("app_user_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_app_user_created_by")
+  other_app_user_app_user_created_byToapp_user                           app_user[]                 @relation("app_user_created_byToapp_user")
+  app_user_app_user_deleted_byToapp_user                                 app_user?                  @relation("app_user_deleted_byToapp_user", fields: [deleted_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_app_user_deleted_by")
+  other_app_user_app_user_deleted_byToapp_user                           app_user[]                 @relation("app_user_deleted_byToapp_user")
+  profile                                                                profile                    @relation("app_user_profile_idToprofile", fields: [profile_id], references: [profile_id], onUpdate: NoAction, map: "fk_app_user_profile_id")
+  role                                                                   role                       @relation("app_user_role_idTorole", fields: [role_id], references: [role_id], onUpdate: NoAction, map: "fk_app_user_role_id")
+  app_user_app_user_updated_byToapp_user                                 app_user?                  @relation("app_user_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_app_user_updated_by")
+  other_app_user_app_user_updated_byToapp_user                           app_user[]                 @relation("app_user_updated_byToapp_user")
+  area                                                                   area[]
+  audit_log                                                              audit_log[]
+  auth_session                                                           auth_session[]
+  bank_account_bank_account_created_byToapp_user                         bank_account[]             @relation("bank_account_created_byToapp_user")
+  bank_account_bank_account_deleted_byToapp_user                         bank_account[]             @relation("bank_account_deleted_byToapp_user")
+  bank_account_bank_account_updated_byToapp_user                         bank_account[]             @relation("bank_account_updated_byToapp_user")
+  city                                                                   city[]
+  company_company_created_byToapp_user                                   company[]                  @relation("company_created_byToapp_user")
+  company_company_deleted_byToapp_user                                   company[]                  @relation("company_deleted_byToapp_user")
+  company_company_updated_byToapp_user                                   company[]                  @relation("company_updated_byToapp_user")
+  consent_consent_created_byToapp_user                                   consent[]                  @relation("consent_created_byToapp_user")
+  consent_consent_updated_byToapp_user                                   consent[]                  @relation("consent_updated_byToapp_user")
+  country                                                                country[]
+  currency                                                               currency[]
+  customer_customer_created_byToapp_user                                 customer[]                 @relation("customer_created_byToapp_user")
+  customer_customer_deleted_byToapp_user                                 customer[]                 @relation("customer_deleted_byToapp_user")
+  customer_customer_updated_byToapp_user                                 customer[]                 @relation("customer_updated_byToapp_user")
+  customer_profile_customer_profile_created_byToapp_user                 customer_profile[]         @relation("customer_profile_created_byToapp_user")
+  customer_profile_customer_profile_deleted_byToapp_user                 customer_profile[]         @relation("customer_profile_deleted_byToapp_user")
+  customer_profile_customer_profile_updated_byToapp_user                 customer_profile[]         @relation("customer_profile_updated_byToapp_user")
+  document_document_created_byToapp_user                                 document[]                 @relation("document_created_byToapp_user")
+  document_document_deleted_byToapp_user                                 document[]                 @relation("document_deleted_byToapp_user")
+  document_document_updated_byToapp_user                                 document[]                 @relation("document_updated_byToapp_user")
+  document_type_document_type_created_byToapp_user                       document_type[]            @relation("document_type_created_byToapp_user")
+  document_type_document_type_updated_byToapp_user                       document_type[]            @relation("document_type_updated_byToapp_user")
+  employee_employee_created_byToapp_user                                 employee[]                 @relation("employee_created_byToapp_user")
+  employee_employee_updated_byToapp_user                                 employee[]                 @relation("employee_updated_byToapp_user")
+  employee_function                                                      employee_function[]
+  employee_organization                                                  employee_organization[]
+  employee_skill                                                         employee_skill[]
+  file_object_file_object_created_byToapp_user                           file_object[]              @relation("file_object_created_byToapp_user")
+  file_object_file_object_deleted_byToapp_user                           file_object[]              @relation("file_object_deleted_byToapp_user")
+  file_object_file_object_updated_byToapp_user                           file_object[]              @relation("file_object_updated_byToapp_user")
+  menu_function                                                          menu_function[]
+  menu_item                                                              menu_item[]
+  menu_role                                                              menu_role[]
+  menu_special_user_access_menu_special_user_access_created_byToapp_user menu_special_user_access[] @relation("menu_special_user_access_created_byToapp_user")
+  menu_special_user_access_menu_special_user_access_updated_byToapp_user menu_special_user_access[] @relation("menu_special_user_access_updated_byToapp_user")
+  nationality                                                            nationality[]
+  organization_organization_created_byToapp_user                         organization[]             @relation("organization_created_byToapp_user")
+  organization_organization_updated_byToapp_user                         organization[]             @relation("organization_updated_byToapp_user")
+  parameter_parameter_created_byToapp_user                               parameter[]                @relation("parameter_created_byToapp_user")
+  parameter_parameter_updated_byToapp_user                               parameter[]                @relation("parameter_updated_byToapp_user")
+  parameter_type_parameter_type_created_byToapp_user                     parameter_type[]           @relation("parameter_type_created_byToapp_user")
+  parameter_type_parameter_type_updated_byToapp_user                     parameter_type[]           @relation("parameter_type_updated_byToapp_user")
+  password_reset_token_password_reset_token_created_byToapp_user         password_reset_token[]     @relation("password_reset_token_created_byToapp_user")
+  password_reset_token_password_reset_token_user_idToapp_user            password_reset_token[]     @relation("password_reset_token_user_idToapp_user")
+  profile_profile_created_byToapp_user                                   profile[]                  @relation("profile_created_byToapp_user")
+  profile_profile_deleted_byToapp_user                                   profile[]                  @relation("profile_deleted_byToapp_user")
+  profile_profile_updated_byToapp_user                                   profile[]                  @relation("profile_updated_byToapp_user")
+  role_role_created_byToapp_user                                         role[]                     @relation("role_created_byToapp_user")
+  service_request                                                        service_request[]
+  service_request_log                                                    service_request_log[]
+  state                                                                  state[]
+  survey_survey_completed_byToapp_user                                   survey[]                   @relation("survey_completed_byToapp_user")
+  survey_survey_created_byToapp_user                                     survey[]                   @relation("survey_created_byToapp_user")
+  survey_survey_dropped_byToapp_user                                     survey[]                   @relation("survey_dropped_byToapp_user")
+  survey_survey_updated_byToapp_user                                     survey[]                   @relation("survey_updated_byToapp_user")
+  survey_special_requisite                                               survey_special_requisite[]
+  tax_registration_tax_registration_created_byToapp_user                 tax_registration[]         @relation("tax_registration_created_byToapp_user")
+  tax_registration_tax_registration_updated_byToapp_user                 tax_registration[]         @relation("tax_registration_updated_byToapp_user")
+  team_member                                                            team_member[]
+  time_zone                                                              time_zone[]
+  user_activity                                                          user_activity[]
+  user_device_user_device_created_byToapp_user                           user_device[]              @relation("user_device_created_byToapp_user")
+  user_device_user_device_user_idToapp_user                              user_device[]              @relation("user_device_user_idToapp_user")
+
+  @@index([profile_id], map: "ix_app_user_profile_id")
+  @@index([role_id], map: "ix_app_user_role_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model area {
+  area_id    Int       @id(map: "pk_area") @default(autoincrement())
+  city_id    Int
+  name       String    @db.VarChar(150)
+  is_active  Boolean   @default(true)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  created_by BigInt?
+  address    address[]
+  city       city      @relation(fields: [city_id], references: [city_id], onUpdate: NoAction, map: "fk_area_city_id")
+  app_user   app_user? @relation(fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_area_created_by")
+
+  @@index([city_id], map: "ix_area_city_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model audit_log {
+  audit_id    BigInt    @id(map: "pk_audit_log") @default(autoincrement())
+  occurred_at DateTime  @default(now()) @db.Timestamptz(6)
+  table_name  String    @db.VarChar(63)
+  record_id   String    @db.VarChar(40)
+  action      String    @db.Char(1)
+  changed_by  BigInt?
+  old_values  Json?
+  new_values  Json?
+  request_id  String?   @db.Uuid
+  app_user    app_user? @relation(fields: [changed_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_audit_log_changed_by")
+
+  @@index([changed_by], map: "ix_audit_log_changed_by")
+  @@index([table_name, record_id, occurred_at(sort: Desc)], map: "ix_audit_log_record")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model auth_session {
+  session_id         String        @id(map: "pk_auth_session") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id            BigInt
+  refresh_token_hash String        @unique(map: "uq_auth_session_refresh_token_hash") @db.Char(64)
+  user_device_id     BigInt?
+  issued_at          DateTime      @default(now()) @db.Timestamptz(6)
+  expires_at         DateTime      @db.Timestamptz(6)
+  revoked_at         DateTime?     @db.Timestamptz(6)
+  ip_address         String?       @db.Inet
+  user_agent         String?       @db.VarChar(400)
+  is_mobile          Boolean       @default(false)
+  organization_id    BigInt?
+  organization       organization? @relation(fields: [organization_id], references: [organization_id], onUpdate: NoAction, map: "fk_auth_session_organization_id")
+  user_device        user_device?  @relation(fields: [user_device_id], references: [user_device_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_auth_session_user_device_id")
+  app_user           app_user      @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_auth_session_user_id")
+
+  @@index([user_device_id], map: "ix_auth_session_user_device_id")
+  @@index([user_id], map: "ix_auth_session_user_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model bank_account {
+  bank_account_id                            BigInt    @id(map: "pk_bank_account") @default(autoincrement())
+  profile_id                                 BigInt?
+  customer_id                                BigInt?
+  company_id                                 BigInt?
+  account_holder_name                        String    @db.VarChar(200)
+  bank_name                                  String    @db.VarChar(150)
+  branch_name                                String?   @db.VarChar(150)
+  account_number_enc                         Bytes?
+  iban                                       String?   @db.VarChar(34)
+  swift_bic                                  String?   @db.VarChar(11)
+  currency_id                                Int?
+  is_default                                 Boolean   @default(false)
+  is_active                                  Boolean   @default(true)
+  created_at                                 DateTime  @default(now()) @db.Timestamptz(6)
+  created_by                                 BigInt?
+  updated_at                                 DateTime  @default(now()) @db.Timestamptz(6)
+  updated_by                                 BigInt?
+  deleted_at                                 DateTime? @db.Timestamptz(6)
+  deleted_by                                 BigInt?
+  company                                    company?  @relation(fields: [company_id], references: [company_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_bank_account_company_id")
+  app_user_bank_account_created_byToapp_user app_user? @relation("bank_account_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_bank_account_created_by")
+  currency                                   currency? @relation(fields: [currency_id], references: [currency_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_bank_account_currency_id")
+  customer                                   customer? @relation(fields: [customer_id], references: [customer_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_bank_account_customer_id")
+  app_user_bank_account_deleted_byToapp_user app_user? @relation("bank_account_deleted_byToapp_user", fields: [deleted_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_bank_account_deleted_by")
+  profile                                    profile?  @relation(fields: [profile_id], references: [profile_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_bank_account_profile_id")
+  app_user_bank_account_updated_byToapp_user app_user? @relation("bank_account_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_bank_account_updated_by")
+
+  @@index([company_id], map: "ix_bank_account_company_id")
+  @@index([currency_id], map: "ix_bank_account_currency_id")
+  @@index([customer_id], map: "ix_bank_account_customer_id")
+  @@index([profile_id], map: "ix_bank_account_profile_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model city {
+  city_id    Int       @id(map: "pk_city") @default(autoincrement())
+  country_id Int
+  state_id   Int?
+  name       String    @db.VarChar(100)
+  is_active  Boolean   @default(true)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  created_by BigInt?
+  address    address[]
+  area       area[]
+  country    country   @relation(fields: [country_id], references: [country_id], onUpdate: NoAction, map: "fk_city_country_id")
+  app_user   app_user? @relation(fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_city_created_by")
+  state      state?    @relation(fields: [state_id], references: [state_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_city_state_id")
+
+  @@index([country_id], map: "ix_city_country_id")
+  @@index([state_id], map: "ix_city_state_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model company {
+  company_id                                   BigInt             @id(map: "pk_company") @default(autoincrement())
+  public_id                                    String             @unique(map: "uq_company_public_id") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  company_type_id                              Int
+  company_code                                 String?            @unique(map: "uq_company_company_code") @db.VarChar(20)
+  name                                         String             @db.VarChar(250)
+  contact_name                                 String?            @db.VarChar(250)
+  email                                        String?            @db.Citext
+  contact_no                                   String?            @db.VarChar(20)
+  website                                      String?            @db.VarChar(255)
+  country_id                                   Int?
+  services                                     String?
+  payment_term_id                              Int?
+  currency_id                                  Int?
+  status_id                                    Int
+  notes                                        String?
+  created_at                                   DateTime           @default(now()) @db.Timestamptz(6)
+  created_by                                   BigInt?
+  updated_at                                   DateTime           @default(now()) @db.Timestamptz(6)
+  updated_by                                   BigInt?
+  deleted_at                                   DateTime?          @db.Timestamptz(6)
+  deleted_by                                   BigInt?
+  row_version                                  Int                @default(1)
+  organization_id                              BigInt
+  address_id                                   BigInt?
+  bank_account                                 bank_account[]
+  address_company_address_idToaddress          address?           @relation("company_address_idToaddress", fields: [address_id], references: [address_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_company_address_id")
+  parameter_company_company_type_idToparameter parameter          @relation("company_company_type_idToparameter", fields: [company_type_id], references: [parameter_id], onUpdate: NoAction, map: "fk_company_company_type_id")
+  country                                      country?           @relation(fields: [country_id], references: [country_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_company_country_id")
+  app_user_company_created_byToapp_user        app_user?          @relation("company_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_company_created_by")
+  currency                                     currency?          @relation(fields: [currency_id], references: [currency_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_company_currency_id")
+  app_user_company_deleted_byToapp_user        app_user?          @relation("company_deleted_byToapp_user", fields: [deleted_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_company_deleted_by")
+  organization                                 organization       @relation(fields: [organization_id], references: [organization_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_company_organization_id")
+  parameter_company_payment_term_idToparameter parameter?         @relation("company_payment_term_idToparameter", fields: [payment_term_id], references: [parameter_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_company_payment_term_id")
+  parameter_company_status_idToparameter       parameter          @relation("company_status_idToparameter", fields: [status_id], references: [parameter_id], onUpdate: NoAction, map: "fk_company_status_id")
+  app_user_company_updated_byToapp_user        app_user?          @relation("company_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_company_updated_by")
+  document                                     document[]
+  employee                                     employee[]
+  profile                                      profile[]
+  tax_registration                             tax_registration[]
+
+  @@index([organization_id], map: "ix_company_organization_id")
+  @@index([company_type_id], map: "ix_company_company_type_id")
+  @@index([country_id], map: "ix_company_country_id")
+  @@index([currency_id], map: "ix_company_currency_id")
+  @@index([name(ops: raw("gin_trgm_ops"))], map: "ix_company_name_trgm", type: Gin)
+  @@index([payment_term_id], map: "ix_company_payment_term_id")
+  @@index([status_id], map: "ix_company_status_id")
+  @@index([address_id], map: "ix_company_address_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model consent {
+  consent_id                              BigInt    @id(map: "pk_consent") @default(autoincrement())
+  profile_id                              BigInt
+  channel_id                              Int
+  status_id                               Int
+  status_changed_at                       DateTime  @default(now()) @db.Timestamptz(6)
+  source                                  String?   @db.VarChar(30)
+  created_at                              DateTime  @default(now()) @db.Timestamptz(6)
+  created_by                              BigInt?
+  updated_at                              DateTime  @default(now()) @db.Timestamptz(6)
+  updated_by                              BigInt?
+  parameter_consent_channel_idToparameter parameter @relation("consent_channel_idToparameter", fields: [channel_id], references: [parameter_id], onUpdate: NoAction, map: "fk_consent_channel_id")
+  app_user_consent_created_byToapp_user   app_user? @relation("consent_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_consent_created_by")
+  profile                                 profile   @relation(fields: [profile_id], references: [profile_id], onUpdate: NoAction, map: "fk_consent_profile_id")
+  parameter_consent_status_idToparameter  parameter @relation("consent_status_idToparameter", fields: [status_id], references: [parameter_id], onUpdate: NoAction, map: "fk_consent_status_id")
+  app_user_consent_updated_byToapp_user   app_user? @relation("consent_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_consent_updated_by")
+
+  @@index([channel_id], map: "ix_consent_channel_id")
+  @@index([profile_id], map: "ix_consent_profile_id")
+  @@index([status_id], map: "ix_consent_status_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model country {
+  country_id          Int                @id(map: "pk_country") @default(autoincrement())
+  iso2                String             @unique(map: "uq_country_iso2") @db.Char(2)
+  iso3                String?            @unique(map: "uq_country_iso3") @db.Char(3)
+  name                String             @unique(map: "uq_country_name") @db.VarChar(100)
+  dial_code           String?            @db.VarChar(6)
+  default_currency_id Int?
+  is_active           Boolean            @default(true)
+  created_at          DateTime           @default(now()) @db.Timestamptz(6)
+  created_by          BigInt?
+  address             address[]
+  city                city[]
+  company             company[]
+  app_user            app_user?          @relation(fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_country_created_by")
+  currency            currency?          @relation(fields: [default_currency_id], references: [currency_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_country_default_currency_id")
+  nationality         nationality[]
+  state               state[]
+  tax_registration    tax_registration[]
+
+  @@index([default_currency_id], map: "ix_country_default_currency_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model currency {
+  currency_id    Int            @id(map: "pk_currency") @default(autoincrement())
+  code           String         @unique(map: "uq_currency_code") @db.Char(3)
+  name           String         @db.VarChar(100)
+  symbol         String?        @db.VarChar(8)
+  decimal_places Int            @default(2) @db.SmallInt
+  is_active      Boolean        @default(true)
+  display_order  Int            @default(0) @db.SmallInt
+  created_at     DateTime       @default(now()) @db.Timestamptz(6)
+  created_by     BigInt?
+  bank_account   bank_account[]
+  company        company[]
+  country        country[]
+  app_user       app_user?      @relation(fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_currency_created_by")
+  organization   organization[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model customer {
+  customer_id                              BigInt             @id(map: "pk_customer") @default(autoincrement())
+  public_id                                String             @unique(map: "uq_customer_public_id") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customer_kind                            String             @db.VarChar(10)
+  customer_code                            String?            @unique(map: "uq_customer_customer_code") @db.VarChar(20)
+  customer_name                            String?            @db.VarChar(250)
+  organization_id                          BigInt?
+  bill_to_id                               Int?
+  whatsapp_optin                           Boolean            @default(true)
+  status_id                                Int
+  notes                                    String?
+  created_at                               DateTime           @default(now()) @db.Timestamptz(6)
+  created_by                               BigInt?
+  updated_at                               DateTime           @default(now()) @db.Timestamptz(6)
+  updated_by                               BigInt?
+  deleted_at                               DateTime?          @db.Timestamptz(6)
+  deleted_by                               BigInt?
+  row_version                              Int                @default(1)
+  bank_account                             bank_account[]
+  parameter_customer_bill_to_idToparameter parameter?         @relation("customer_bill_to_idToparameter", fields: [bill_to_id], references: [parameter_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_customer_bill_to_id")
+  app_user_customer_created_byToapp_user   app_user?          @relation("customer_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_customer_created_by")
+  app_user_customer_deleted_byToapp_user   app_user?          @relation("customer_deleted_byToapp_user", fields: [deleted_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_customer_deleted_by")
+  organization                             organization?      @relation(fields: [organization_id], references: [organization_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_customer_organization_id")
+  parameter_customer_status_idToparameter  parameter          @relation("customer_status_idToparameter", fields: [status_id], references: [parameter_id], onUpdate: NoAction, map: "fk_customer_status_id")
+  app_user_customer_updated_byToapp_user   app_user?          @relation("customer_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_customer_updated_by")
+  customer_profile                         customer_profile[]
+  document                                 document[]
+  service_request                          service_request[]
+  tax_registration                         tax_registration[]
+
+  @@index([bill_to_id], map: "ix_customer_bill_to_id")
+  @@index([customer_name(ops: raw("gin_trgm_ops"))], map: "ix_customer_name_trgm", type: Gin)
+  @@index([organization_id], map: "ix_customer_organization_id")
+  @@index([status_id], map: "ix_customer_status_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model employee {
+  profile_id                                          BigInt                  @id(map: "pk_employee")
+  employee_code                                       String                  @unique(map: "uq_employee_employee_code") @db.VarChar(20)
+  organization_id                                     BigInt
+  contractor_company_id                               BigInt?
+  is_outsourced                                       Boolean                 @default(false)
+  join_date                                           DateTime?               @db.Date
+  exit_date                                           DateTime?               @db.Date
+  billing_rate                                        Decimal?                @db.Decimal(12, 2)
+  ctc_rate                                            Decimal?                @db.Decimal(12, 2)
+  created_at                                          DateTime                @default(now()) @db.Timestamptz(6)
+  created_by                                          BigInt?
+  updated_at                                          DateTime                @default(now()) @db.Timestamptz(6)
+  updated_by                                          BigInt?
+  person_type                                         String                  @default("EMPLOYEE") @db.VarChar(12)
+  company                                             company?                @relation(fields: [contractor_company_id], references: [company_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_employee_contractor_company_id")
+  app_user_employee_created_byToapp_user              app_user?               @relation("employee_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_employee_created_by")
+  organization                                        organization            @relation(fields: [organization_id], references: [organization_id], onUpdate: NoAction, map: "fk_employee_organization_id")
+  profile                                             profile                 @relation(fields: [profile_id], references: [profile_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_employee_profile_id")
+  app_user_employee_updated_byToapp_user              app_user?               @relation("employee_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_employee_updated_by")
+  employee_function                                   employee_function[]
+  employee_organization                               employee_organization[]
+  employee_skill                                      employee_skill[]
+  service_request                                     service_request[]
+  team_member_team_member_leader_profile_idToemployee team_member[]           @relation("team_member_leader_profile_idToemployee")
+  team_member_team_member_member_profile_idToemployee team_member[]           @relation("team_member_member_profile_idToemployee")
+
+  @@index([contractor_company_id], map: "ix_employee_contractor_company_id")
+  @@index([organization_id], map: "ix_employee_organization_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model employee_function {
+  profile_id  BigInt
+  function_id Int
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  created_by  BigInt?
+  app_user    app_user? @relation(fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_employee_function_created_by")
+  parameter   parameter @relation(fields: [function_id], references: [parameter_id], onUpdate: NoAction, map: "fk_employee_function_function_id")
+  employee    employee  @relation(fields: [profile_id], references: [profile_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_employee_function_profile_id")
+
+  @@id([profile_id, function_id], map: "pk_employee_function")
+  @@index([function_id], map: "ix_employee_function_function_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model employee_organization {
+  profile_id      BigInt
+  organization_id BigInt
+  created_at      DateTime     @default(now()) @db.Timestamptz(6)
+  created_by      BigInt?
+  app_user        app_user?    @relation(fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_employee_organization_created_by")
+  organization    organization @relation(fields: [organization_id], references: [organization_id], onUpdate: NoAction, map: "fk_employee_organization_organization_id")
+  employee        employee     @relation(fields: [profile_id], references: [profile_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_employee_organization_profile_id")
+
+  @@id([profile_id, organization_id], map: "pk_employee_organization")
+  @@index([organization_id], map: "ix_employee_organization_organization_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model employee_skill {
+  profile_id BigInt
+  skill_id   Int
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  created_by BigInt?
+  app_user   app_user? @relation(fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_employee_skill_created_by")
+  employee   employee  @relation(fields: [profile_id], references: [profile_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_employee_skill_profile_id")
+  parameter  parameter @relation(fields: [skill_id], references: [parameter_id], onUpdate: NoAction, map: "fk_employee_skill_skill_id")
+
+  @@id([profile_id, skill_id], map: "pk_employee_skill")
+  @@index([skill_id], map: "ix_employee_skill_skill_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model file_object {
+  file_id                                   BigInt     @id(map: "pk_file_object") @default(autoincrement())
+  public_id                                 String     @unique(map: "uq_file_object_public_id") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  storage_provider                          String     @default("LOCAL") @db.VarChar(20)
+  storage_key                               String     @db.VarChar(500)
+  original_name                             String     @db.VarChar(255)
+  mime_type                                 String?    @db.VarChar(100)
+  size_bytes                                BigInt?
+  sha256                                    String?    @db.Char(64)
+  created_at                                DateTime   @default(now()) @db.Timestamptz(6)
+  created_by                                BigInt?
+  updated_at                                DateTime   @default(now()) @db.Timestamptz(6)
+  updated_by                                BigInt?
+  deleted_at                                DateTime?  @db.Timestamptz(6)
+  deleted_by                                BigInt?
+  document                                  document[]
+  app_user_file_object_created_byToapp_user app_user?  @relation("file_object_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_file_object_created_by")
+  app_user_file_object_deleted_byToapp_user app_user?  @relation("file_object_deleted_byToapp_user", fields: [deleted_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_file_object_deleted_by")
+  app_user_file_object_updated_byToapp_user app_user?  @relation("file_object_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_file_object_updated_by")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model menu_function {
+  menu_function_id BigInt    @id(map: "pk_menu_function") @default(autoincrement())
+  menu_item_id     Int
+  function_id      Int
+  created_at       DateTime  @default(now()) @db.Timestamptz(6)
+  created_by       BigInt?
+  app_user         app_user? @relation(fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_menu_function_created_by")
+  parameter        parameter @relation(fields: [function_id], references: [parameter_id], onUpdate: NoAction, map: "fk_menu_function_function_id")
+  menu_item        menu_item @relation(fields: [menu_item_id], references: [menu_item_id], onUpdate: NoAction, map: "fk_menu_function_menu_item_id")
+
+  @@unique([menu_item_id, function_id], map: "uq_menu_function")
+  @@index([function_id], map: "ix_menu_function_function_id")
+  @@index([menu_item_id], map: "ix_menu_function_menu_item_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model menu_item {
+  menu_item_id             Int                        @id(map: "pk_menu_item") @default(autoincrement())
+  menu_code                String                     @unique(map: "uq_menu_item_menu_code") @db.VarChar(80)
+  menu_name                String                     @db.VarChar(100)
+  menu_parent_id           Int?
+  menu_order               Int?                       @db.SmallInt
+  css_class                String?                    @db.VarChar(50)
+  page_url                 String?                    @db.VarChar(350)
+  is_main_menu             Boolean                    @default(true)
+  organization_id          BigInt?
+  is_active                Boolean                    @default(true)
+  created_at               DateTime                   @default(now()) @db.Timestamptz(6)
+  created_by               BigInt?
+  menu_function            menu_function[]
+  app_user                 app_user?                  @relation(fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_menu_item_created_by")
+  menu_item                menu_item?                 @relation("menu_itemTomenu_item", fields: [menu_parent_id], references: [menu_item_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_menu_item_menu_parent_id")
+  other_menu_item          menu_item[]                @relation("menu_itemTomenu_item")
+  organization             organization?              @relation(fields: [organization_id], references: [organization_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_menu_item_organization_id")
+  menu_role                menu_role[]
+  menu_special_user_access menu_special_user_access[]
+  user_activity            user_activity[]
+
+  @@index([menu_parent_id], map: "ix_menu_item_menu_parent_id")
+  @@index([organization_id], map: "ix_menu_item_organization_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model menu_role {
+  menu_role_id BigInt    @id(map: "pk_menu_role") @default(autoincrement())
+  role_id      Int
+  menu_item_id Int
+  page_url     String?   @db.VarChar(350)
+  is_create    Boolean   @default(false)
+  is_edit      Boolean   @default(false)
+  is_delete    Boolean   @default(false)
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  created_by   BigInt?
+  app_user     app_user? @relation(fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_menu_role_created_by")
+  menu_item    menu_item @relation(fields: [menu_item_id], references: [menu_item_id], onUpdate: NoAction, map: "fk_menu_role_menu_item_id")
+  role         role      @relation(fields: [role_id], references: [role_id], onUpdate: NoAction, map: "fk_menu_role_role_id")
+
+  @@unique([role_id, menu_item_id], map: "uq_menu_role")
+  @@index([menu_item_id], map: "ix_menu_role_menu_item_id")
+  @@index([role_id], map: "ix_menu_role_role_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model menu_special_user_access {
+  menu_special_user_access_id                            BigInt       @id(map: "pk_menu_special_user_access") @default(autoincrement())
+  profile_id                                             BigInt
+  menu_item_id                                           Int
+  organization_id                                        BigInt
+  is_include                                             Boolean
+  page_url                                               String?      @db.VarChar(350)
+  is_create                                              Boolean      @default(false)
+  is_edit                                                Boolean      @default(false)
+  is_delete                                              Boolean      @default(false)
+  created_at                                             DateTime     @default(now()) @db.Timestamptz(6)
+  created_by                                             BigInt?
+  updated_at                                             DateTime     @default(now()) @db.Timestamptz(6)
+  updated_by                                             BigInt?
+  app_user_menu_special_user_access_created_byToapp_user app_user?    @relation("menu_special_user_access_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_menu_special_user_access_created_by")
+  menu_item                                              menu_item    @relation(fields: [menu_item_id], references: [menu_item_id], onUpdate: NoAction, map: "fk_menu_special_user_access_menu_item_id")
+  organization                                           organization @relation(fields: [organization_id], references: [organization_id], onUpdate: NoAction, map: "fk_menu_special_user_access_organization_id")
+  profile                                                profile      @relation(fields: [profile_id], references: [profile_id], onUpdate: NoAction, map: "fk_menu_special_user_access_profile_id")
+  app_user_menu_special_user_access_updated_byToapp_user app_user?    @relation("menu_special_user_access_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_menu_special_user_access_updated_by")
+
+  @@unique([profile_id, menu_item_id, organization_id], map: "uq_menu_special_user_access")
+  @@index([menu_item_id], map: "ix_menu_special_user_access_menu_item_id")
+  @@index([organization_id], map: "ix_menu_special_user_access_organization_id")
+  @@index([profile_id], map: "ix_menu_special_user_access_profile_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model nationality {
+  nationality_id Int       @id(map: "pk_nationality") @default(autoincrement())
+  code           String?   @unique(map: "uq_nationality_code") @db.VarChar(10)
+  name           String    @unique(map: "uq_nationality_name") @db.VarChar(100)
+  country_id     Int?
+  is_active      Boolean   @default(true)
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  created_by     BigInt?
+  country        country?  @relation(fields: [country_id], references: [country_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_nationality_country_id")
+  app_user       app_user? @relation(fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_nationality_created_by")
+  profile        profile[]
+
+  @@index([country_id], map: "ix_nationality_country_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model organization {
+  organization_id                                            BigInt                     @id(map: "pk_organization") @default(autoincrement())
+  organization_code                                          String                     @unique(map: "uq_organization_organization_code") @db.VarChar(20)
+  name                                                       String                     @db.VarChar(150)
+  is_head_office                                             Boolean                    @default(false)
+  contact_no                                                 String?                    @db.VarChar(20)
+  base_currency_id                                           Int?
+  time_zone_id                                               Int?
+  logo_file_id                                               BigInt?
+  is_active                                                  Boolean                    @default(true)
+  created_at                                                 DateTime                   @default(now()) @db.Timestamptz(6)
+  created_by                                                 BigInt?
+  updated_at                                                 DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_by                                                 BigInt?
+  row_version                                                Int                        @default(1)
+  contact_profile_id                                         BigInt?
+  address_id                                                 BigInt?
+  lead_email                                                 String?                    @db.Citext
+  lead_cc_email                                              String?                    @db.Citext
+  quote_header_file_id                                       BigInt?
+  volume_uom_id                                              Int?
+  furniture_volume_uom_id                                    Int?
+  quote_review_min_limit                                     Decimal?                   @db.Decimal(14, 2)
+  workload_min                                               Decimal?                   @db.Decimal(10, 2)
+  workload_max                                               Decimal?                   @db.Decimal(10, 2)
+  job_confirm_min_hours                                      Int?
+  employee_cost_per_hour                                     Decimal?                   @db.Decimal(12, 2)
+  vehicle_cost_per_trip                                      Decimal?                   @db.Decimal(12, 2)
+  employee_working_hours                                     Decimal?                   @db.Decimal(4, 1)
+  vat_percent                                                Decimal?                   @db.Decimal(5, 2)
+  profit_percent                                             Decimal?                   @db.Decimal(5, 2)
+  display_color                                              String?                    @db.Char(7)
+  invoice_max_delay_days                                     Int?
+  auth_session                                               auth_session[]
+  company                                                    company[]
+  customer                                                   customer[]
+  employee                                                   employee[]
+  employee_organization                                      employee_organization[]
+  menu_item                                                  menu_item[]
+  menu_special_user_access                                   menu_special_user_access[]
+  currency                                                   currency?                  @relation(fields: [base_currency_id], references: [currency_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_organization_base_currency_id")
+  app_user_organization_created_byToapp_user                 app_user?                  @relation("organization_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_organization_created_by")
+  file_object                                                file_doc?                  @relation(fields: [logo_file_id], references: [file_doc_id], onUpdate: NoAction, map: "fk_organization_logo_file_id")
+  file_object_organization_quote_header_file_idTofile_object file_doc?                  @relation("organization_quote_header_file_idTofile_object", fields: [quote_header_file_id], references: [file_doc_id], onUpdate: NoAction, map: "fk_organization_quote_header_file_id")
+  time_zone                                                  time_zone?                 @relation(fields: [time_zone_id], references: [time_zone_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_organization_time_zone_id")
+  app_user_organization_updated_byToapp_user                 app_user?                  @relation("organization_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_organization_updated_by")
+  address                                                    address?                   @relation(fields: [address_id], references: [address_id], onUpdate: NoAction)
+  profile                                                    profile?                   @relation(fields: [contact_profile_id], references: [profile_id], onUpdate: NoAction)
+  parameter_organization_furniture_volume_uom_idToparameter  parameter?                 @relation("organization_furniture_volume_uom_idToparameter", fields: [furniture_volume_uom_id], references: [parameter_id], onDelete: NoAction, onUpdate: NoAction)
+  parameter_organization_volume_uom_idToparameter            parameter?                 @relation("organization_volume_uom_idToparameter", fields: [volume_uom_id], references: [parameter_id], onDelete: NoAction, onUpdate: NoAction)
+  parameter                                                  parameter[]
+  service_request                                            service_request[]
+  user_activity                                              user_activity[]
+
+  @@index([base_currency_id], map: "ix_organization_base_currency_id")
+  @@index([logo_file_id], map: "ix_organization_logo_file_id")
+  @@index([time_zone_id], map: "ix_organization_time_zone_id")
+  @@index([address_id], map: "ix_organization_address_id")
+  @@index([contact_profile_id], map: "ix_organization_contact_profile_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model parameter {
+  parameter_id                                                             Int                        @id(map: "pk_parameter") @default(autoincrement())
+  parameter_type_id                                                        Int
+  code                                                                     String                     @db.VarChar(60)
+  label                                                                    String                     @db.VarChar(250)
+  description                                                              String?
+  display_order                                                            Int                        @default(0) @db.SmallInt
+  is_default                                                               Boolean                    @default(false)
+  is_fixed                                                                 Boolean                    @default(false)
+  is_active                                                                Boolean                    @default(true)
+  color_hex                                                                String?                    @db.Char(7)
+  parent_parameter_id                                                      Int?
+  organization_id                                                          BigInt?
+  created_at                                                               DateTime                   @default(now()) @db.Timestamptz(6)
+  created_by                                                               BigInt?
+  updated_at                                                               DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_by                                                               BigInt?
+  parameter_value                                                          Int
+  address                                                                  address[]
+  company_company_company_type_idToparameter                               company[]                  @relation("company_company_type_idToparameter")
+  company_company_payment_term_idToparameter                               company[]                  @relation("company_payment_term_idToparameter")
+  company_company_status_idToparameter                                     company[]                  @relation("company_status_idToparameter")
+  consent_consent_channel_idToparameter                                    consent[]                  @relation("consent_channel_idToparameter")
+  consent_consent_status_idToparameter                                     consent[]                  @relation("consent_status_idToparameter")
+  customer_customer_bill_to_idToparameter                                  customer[]                 @relation("customer_bill_to_idToparameter")
+  customer_customer_status_idToparameter                                   customer[]                 @relation("customer_status_idToparameter")
+  document_type                                                            document_type[]
+  employee_function                                                        employee_function[]
+  employee_skill                                                           employee_skill[]
+  file_doc                                                                 file_doc[]
+  menu_function                                                            menu_function[]
+  organization_organization_furniture_volume_uom_idToparameter             organization[]             @relation("organization_furniture_volume_uom_idToparameter")
+  organization_organization_volume_uom_idToparameter                       organization[]             @relation("organization_volume_uom_idToparameter")
+  app_user_parameter_created_byToapp_user                                  app_user?                  @relation("parameter_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_parameter_created_by")
+  organization                                                             organization?              @relation(fields: [organization_id], references: [organization_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_parameter_organization_id")
+  parameter_type                                                           parameter_type             @relation(fields: [parameter_type_id], references: [parameter_type_id], onUpdate: NoAction, map: "fk_parameter_parameter_type_id")
+  parameter                                                                parameter?                 @relation("parameterToparameter", fields: [parent_parameter_id], references: [parameter_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_parameter_parent_parameter_id")
+  other_parameter                                                          parameter[]                @relation("parameterToparameter")
+  app_user_parameter_updated_byToapp_user                                  app_user?                  @relation("parameter_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_parameter_updated_by")
+  profile_profile_age_group_idToparameter                                  profile[]                  @relation("profile_age_group_idToparameter")
+  profile_profile_gender_idToparameter                                     profile[]                  @relation("profile_gender_idToparameter")
+  profile_profile_status_idToparameter                                     profile[]                  @relation("profile_status_idToparameter")
+  profile_profile_user_type_idToparameter                                  profile[]                  @relation("profile_user_type_idToparameter")
+  service_request_service_request_drop_reason_idToparameter                service_request[]          @relation("service_request_drop_reason_idToparameter")
+  service_request_service_request_enquiry_channel_idToparameter            service_request[]          @relation("service_request_enquiry_channel_idToparameter")
+  service_request_service_request_international_service_type_idToparameter service_request[]          @relation("service_request_international_service_type_idToparameter")
+  service_request_service_request_referral_idToparameter                   service_request[]          @relation("service_request_referral_idToparameter")
+  service_request_service_request_residence_type_idToparameter             service_request[]          @relation("service_request_residence_type_idToparameter")
+  service_request_service_request_stage_idToparameter                      service_request[]          @relation("service_request_stage_idToparameter")
+  service_request_service_request_status_idToparameter                     service_request[]          @relation("service_request_status_idToparameter")
+  service_request_service_request_survey_type_idToparameter                service_request[]          @relation("service_request_survey_type_idToparameter")
+  service_request_log_service_request_log_from_status_idToparameter        service_request_log[]      @relation("service_request_log_from_status_idToparameter")
+  service_request_log_service_request_log_to_status_idToparameter          service_request_log[]      @relation("service_request_log_to_status_idToparameter")
+  survey                                                                   survey[]
+  survey_special_requisite                                                 survey_special_requisite[]
+  tax_registration                                                         tax_registration[]
+  user_activity                                                            user_activity[]
+  user_device                                                              user_device[]
+
+  @@unique([parameter_type_id, code], map: "uq_parameter_code_per_type")
+  @@unique([parameter_type_id, parameter_value], map: "uq_parameter_type_value")
+  @@index([organization_id], map: "ix_parameter_organization_id")
+  @@index([parameter_type_id], map: "ix_parameter_parameter_type_id")
+  @@index([parent_parameter_id], map: "ix_parameter_parent_parameter_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model parameter_type {
+  parameter_type_id                            Int         @id(map: "pk_parameter_type") @default(autoincrement())
+  code                                         String      @unique(map: "uq_parameter_type_code") @db.VarChar(60)
+  name                                         String      @db.VarChar(150)
+  description                                  String?
+  module_code                                  String      @default("SYSTEM") @db.VarChar(30)
+  is_system                                    Boolean     @default(false)
+  allow_user_values                            Boolean     @default(false)
+  is_company_scoped                            Boolean     @default(false)
+  is_active                                    Boolean     @default(true)
+  display_order                                Int         @default(0) @db.SmallInt
+  created_at                                   DateTime    @default(now()) @db.Timestamptz(6)
+  created_by                                   BigInt?
+  updated_at                                   DateTime    @default(now()) @db.Timestamptz(6)
+  updated_by                                   BigInt?
+  parameter                                    parameter[]
+  app_user_parameter_type_created_byToapp_user app_user?   @relation("parameter_type_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_parameter_type_created_by")
+  app_user_parameter_type_updated_byToapp_user app_user?   @relation("parameter_type_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_parameter_type_updated_by")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model password_reset_token {
+  reset_token_id                                     BigInt    @id(map: "pk_password_reset_token") @default(autoincrement())
+  user_id                                            BigInt
+  token_hash                                         String    @unique(map: "uq_password_reset_token_token_hash") @db.Char(64)
+  purpose                                            String    @default("RESET") @db.VarChar(20)
+  expires_at                                         DateTime  @db.Timestamptz(6)
+  used_at                                            DateTime? @db.Timestamptz(6)
+  requested_ip                                       String?   @db.Inet
+  created_at                                         DateTime  @default(now()) @db.Timestamptz(6)
+  created_by                                         BigInt?
+  app_user_password_reset_token_created_byToapp_user app_user? @relation("password_reset_token_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_password_reset_token_created_by")
+  app_user_password_reset_token_user_idToapp_user    app_user  @relation("password_reset_token_user_idToapp_user", fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_password_reset_token_user_id")
+
+  @@index([user_id], map: "ix_password_reset_token_user_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model profile {
+  profile_id                                                   BigInt                     @id(map: "pk_profile") @default(autoincrement())
+  public_id                                                    String                     @unique(map: "uq_profile_public_id") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_type_id                                                 Int
+  company_id                                                   BigInt?
+  name                                                         String                     @db.VarChar(150)
+  last_name                                                    String?                    @db.VarChar(150)
+  email                                                        String?                    @db.Citext
+  contact_no                                                   String?                    @db.VarChar(20)
+  alt_contact_no                                               String?                    @db.VarChar(20)
+  designation                                                  String?                    @db.VarChar(150)
+  gender_id                                                    Int?
+  date_of_birth                                                DateTime?                  @db.Date
+  age_group_id                                                 Int?
+  nationality_id                                               Int?
+  profession                                                   String?                    @db.VarChar(150)
+  status_id                                                    Int
+  created_at                                                   DateTime                   @default(now()) @db.Timestamptz(6)
+  created_by                                                   BigInt?
+  updated_at                                                   DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_by                                                   BigInt?
+  deleted_at                                                   DateTime?                  @db.Timestamptz(6)
+  deleted_by                                                   BigInt?
+  row_version                                                  Int                        @default(1)
+  address_id                                                   BigInt?
+  app_user_app_user_profile_idToprofile                        app_user?                  @relation("app_user_profile_idToprofile")
+  bank_account                                                 bank_account[]
+  consent                                                      consent[]
+  customer_profile                                             customer_profile[]
+  document                                                     document[]
+  employee                                                     employee?
+  menu_special_user_access                                     menu_special_user_access[]
+  organization                                                 organization[]
+  address_profile_address_idToaddress                          address?                   @relation("profile_address_idToaddress", fields: [address_id], references: [address_id], onUpdate: NoAction, map: "fk_profile_address_id")
+  parameter_profile_age_group_idToparameter                    parameter?                 @relation("profile_age_group_idToparameter", fields: [age_group_id], references: [parameter_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_profile_age_group_id")
+  company                                                      company?                   @relation(fields: [company_id], references: [company_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_profile_company_id")
+  app_user_profile_created_byToapp_user                        app_user?                  @relation("profile_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_profile_created_by")
+  app_user_profile_deleted_byToapp_user                        app_user?                  @relation("profile_deleted_byToapp_user", fields: [deleted_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_profile_deleted_by")
+  parameter_profile_gender_idToparameter                       parameter?                 @relation("profile_gender_idToparameter", fields: [gender_id], references: [parameter_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_profile_gender_id")
+  nationality                                                  nationality?               @relation(fields: [nationality_id], references: [nationality_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_profile_nationality_id")
+  status                                                       parameter                  @relation("profile_status_idToparameter", fields: [status_id], references: [parameter_id], onUpdate: NoAction, map: "fk_profile_status_id")
+  app_user_profile_updated_byToapp_user                        app_user?                  @relation("profile_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_profile_updated_by")
+  userType                                                     parameter                  @relation("profile_user_type_idToparameter", fields: [user_type_id], references: [parameter_id], onUpdate: NoAction, map: "fk_profile_user_type_id")
+  service_request                                              service_request[]
+  service_request_service_request_customer_profile_idToprofile service_request[]          @relation("service_request_customer_profile_idToprofile")
+  survey                                                       survey[]
+
+  @@index([age_group_id], map: "ix_profile_age_group_id")
+  @@index([company_id], map: "ix_profile_company_id")
+  @@index([contact_no], map: "ix_profile_contact_no")
+  @@index([email], map: "ix_profile_email")
+  @@index([gender_id], map: "ix_profile_gender_id")
+  @@index([nationality_id], map: "ix_profile_nationality_id")
+  @@index([status_id], map: "ix_profile_status_id")
+  @@index([user_type_id], map: "ix_profile_user_type_id")
+  @@index([address_id], map: "ix_profile_address_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model role {
+  role_id                            Int         @id(map: "pk_role") @default(autoincrement())
+  role_code                          String      @unique(map: "uq_role_role_code") @db.VarChar(40)
+  name                               String      @db.VarChar(150)
+  role_level                         Int         @default(99) @db.SmallInt
+  is_active                          Boolean     @default(true)
+  created_at                         DateTime    @default(now()) @db.Timestamptz(6)
+  created_by                         BigInt?
+  app_user_app_user_role_idTorole    app_user[]  @relation("app_user_role_idTorole")
+  menu_role                          menu_role[]
+  app_user_role_created_byToapp_user app_user?   @relation("role_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_role_created_by")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model state {
+  state_id   Int       @id(map: "pk_state") @default(autoincrement())
+  country_id Int
+  code       String?   @db.VarChar(10)
+  name       String    @db.VarChar(100)
+  is_active  Boolean   @default(true)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  created_by BigInt?
+  address    address[]
+  city       city[]
+  country    country   @relation(fields: [country_id], references: [country_id], onUpdate: NoAction, map: "fk_state_country_id")
+  app_user   app_user? @relation(fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_state_created_by")
+
+  @@index([country_id], map: "ix_state_country_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model tax_registration {
+  tax_registration_id                            BigInt    @id(map: "pk_tax_registration") @default(autoincrement())
+  customer_id                                    BigInt?
+  company_id                                     BigInt?
+  tax_type_id                                    Int
+  registration_no                                String    @db.VarChar(30)
+  country_id                                     Int?
+  created_at                                     DateTime  @default(now()) @db.Timestamptz(6)
+  created_by                                     BigInt?
+  updated_at                                     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_by                                     BigInt?
+  company                                        company?  @relation(fields: [company_id], references: [company_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_tax_registration_company_id")
+  country                                        country?  @relation(fields: [country_id], references: [country_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_tax_registration_country_id")
+  app_user_tax_registration_created_byToapp_user app_user? @relation("tax_registration_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_tax_registration_created_by")
+  customer                                       customer? @relation(fields: [customer_id], references: [customer_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_tax_registration_customer_id")
+  parameter                                      parameter @relation(fields: [tax_type_id], references: [parameter_id], onUpdate: NoAction, map: "fk_tax_registration_tax_type_id")
+  app_user_tax_registration_updated_byToapp_user app_user? @relation("tax_registration_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_tax_registration_updated_by")
+
+  @@index([company_id], map: "ix_tax_registration_company_id")
+  @@index([country_id], map: "ix_tax_registration_country_id")
+  @@index([customer_id], map: "ix_tax_registration_customer_id")
+  @@index([tax_type_id], map: "ix_tax_registration_tax_type_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model time_zone {
+  time_zone_id       Int            @id(map: "pk_time_zone") @default(autoincrement())
+  iana_name          String         @unique(map: "uq_time_zone_iana_name") @db.VarChar(64)
+  utc_offset_minutes Int?           @db.SmallInt
+  is_active          Boolean        @default(true)
+  created_at         DateTime       @default(now()) @db.Timestamptz(6)
+  created_by         BigInt?
+  organization       organization[]
+  app_user           app_user?      @relation(fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_time_zone_created_by")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model user_activity {
+  activity_id      BigInt        @id(map: "pk_user_activity") @default(autoincrement())
+  occurred_at      DateTime      @default(now()) @db.Timestamptz(6)
+  user_id          BigInt?
+  organization_id  BigInt?
+  activity_type_id Int
+  menu_item_id     Int?
+  entity_name      String?       @db.VarChar(60)
+  entity_id        String?       @db.VarChar(40)
+  result           String        @default("SUCCESS") @db.VarChar(10)
+  ip_address       String?       @db.Inet
+  user_agent       String?       @db.VarChar(400)
+  details          Json?
+  parameter        parameter     @relation(fields: [activity_type_id], references: [parameter_id], onUpdate: NoAction, map: "fk_user_activity_activity_type_id")
+  menu_item        menu_item?    @relation(fields: [menu_item_id], references: [menu_item_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_user_activity_menu_item_id")
+  organization     organization? @relation(fields: [organization_id], references: [organization_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_user_activity_organization_id")
+  app_user         app_user?     @relation(fields: [user_id], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_user_activity_user_id")
+
+  @@index([activity_type_id], map: "ix_user_activity_activity_type_id")
+  @@index([menu_item_id], map: "ix_user_activity_menu_item_id")
+  @@index([organization_id], map: "ix_user_activity_organization_id")
+  @@index([occurred_at], map: "ix_user_activity_time", type: Brin)
+  @@index([user_id], map: "ix_user_activity_user_id")
+  @@index([user_id, occurred_at(sort: Desc)], map: "ix_user_activity_user_time")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model user_device {
+  user_device_id                            BigInt         @id(map: "pk_user_device") @default(autoincrement())
+  user_id                                   BigInt
+  device_identifier                         String         @db.VarChar(400)
+  platform_id                               Int
+  push_token                                String?        @db.VarChar(500)
+  app_version                               String?        @db.VarChar(20)
+  last_seen_at                              DateTime?      @db.Timestamptz(6)
+  is_active                                 Boolean        @default(true)
+  created_at                                DateTime       @default(now()) @db.Timestamptz(6)
+  created_by                                BigInt?
+  auth_session                              auth_session[]
+  app_user_user_device_created_byToapp_user app_user?      @relation("user_device_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_user_device_created_by")
+  parameter                                 parameter      @relation(fields: [platform_id], references: [parameter_id], onUpdate: NoAction, map: "fk_user_device_platform_id")
+  app_user_user_device_user_idToapp_user    app_user       @relation("user_device_user_idToapp_user", fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_device_user_id")
+
+  @@unique([user_id, device_identifier], map: "uq_user_device")
+  @@index([platform_id], map: "ix_user_device_platform_id")
+  @@index([user_id], map: "ix_user_device_user_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model team_member {
+  leader_profile_id                                BigInt
+  member_profile_id                                BigInt
+  created_at                                       DateTime  @default(now()) @db.Timestamptz(6)
+  created_by                                       BigInt?
+  app_user                                         app_user? @relation(fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_team_member_created_by")
+  employee_team_member_leader_profile_idToemployee employee  @relation("team_member_leader_profile_idToemployee", fields: [leader_profile_id], references: [profile_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_team_member_leader")
+  employee_team_member_member_profile_idToemployee employee  @relation("team_member_member_profile_idToemployee", fields: [member_profile_id], references: [profile_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_team_member_member")
+
+  @@id([leader_profile_id, member_profile_id], map: "pk_team_member")
+  @@index([member_profile_id], map: "ix_team_member_member")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model service_type {
+  service_type_id  Int               @id(map: "pk_service_type") @default(autoincrement())
+  service_group_id Int
+  name             String            @db.VarChar(250)
+  display_order    Int               @default(0) @db.SmallInt
+  is_active        Boolean           @default(true)
+  created_at       DateTime          @default(now()) @db.Timestamptz(6)
+  created_by       BigInt?
+  updated_at       DateTime          @default(now()) @db.Timestamptz(6)
+  updated_by       BigInt?
+  service_request  service_request[]
+  parameter        service_group     @relation(fields: [service_group_id], references: [service_group_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_type_group")
+
+  @@unique([service_group_id, name], map: "uq_service_type_name")
+  @@index([service_group_id], map: "ix_service_type_group")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model file_doc {
+  file_doc_id                                                 BigInt          @id(map: "pk_file_doc") @default(autoincrement())
+  name                                                        String          @db.VarChar(255)
+  path                                                        String          @unique(map: "uq_file_doc_path") @db.VarChar(500)
+  mime_type                                                   String?         @db.VarChar(100)
+  size_bytes                                                  BigInt?
+  created_at                                                  DateTime        @default(now()) @db.Timestamptz(6)
+  created_by                                                  BigInt?
+  updated_at                                                  DateTime        @default(now()) @db.Timestamptz(6)
+  updated_by                                                  BigInt?
+  deleted_at                                                  DateTime?       @db.Timestamptz(6)
+  deleted_by                                                  BigInt?
+  file_doc_type_id                                            Int?
+  parameter                                                   parameter?      @relation(fields: [file_doc_type_id], references: [parameter_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_file_doc_file_doc_type_id")
+  organization                                                organization[]
+  organization_organization_quote_header_file_idTofile_object organization[]  @relation("organization_quote_header_file_idTofile_object")
+  service_group                                               service_group[]
+  survey                                                      survey[]
+
+  @@index([file_doc_type_id], map: "ix_file_doc_type")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model service_group {
+  service_group_id Int               @id(map: "pk_service_group") @default(autoincrement())
+  code             String            @unique(map: "uq_service_group_code") @db.VarChar(60)
+  name             String            @unique(map: "uq_service_group_name") @db.VarChar(150)
+  file_id          BigInt?
+  display_order    Int               @default(0) @db.SmallInt
+  is_active        Boolean           @default(true)
+  created_at       DateTime          @default(now()) @db.Timestamptz(6)
+  created_by       BigInt?
+  updated_at       DateTime          @default(now()) @db.Timestamptz(6)
+  updated_by       BigInt?
+  file_doc         file_doc?         @relation(fields: [file_id], references: [file_doc_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_group_file_id")
+  service_request  service_request[]
+  service_type     service_type[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model service_request {
+  service_request_id                                                 BigInt                @id(map: "pk_service_request") @default(autoincrement())
+  public_id                                                          String                @unique(map: "uq_service_request_public_id") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  request_no                                                         String?               @unique(map: "uq_service_request_request_no") @db.VarChar(20)
+  organization_id                                                    BigInt
+  customer_id                                                        BigInt
+  executive_profile_id                                               BigInt?
+  service_group_id                                                   Int
+  service_type_id                                                    Int
+  international_service_type_id                                      Int?
+  title                                                              String                @db.VarChar(250)
+  residence_type_id                                                  Int?
+  move_date                                                          DateTime?             @db.Date
+  volume_cbm                                                         Decimal?              @db.Decimal(10, 2)
+  from_address_id                                                    BigInt?
+  to_address_id                                                      BigInt?
+  enquiry_channel_id                                                 Int?
+  referral_id                                                        Int?
+  survey_required                                                    Boolean               @default(false)
+  survey_type_id                                                     Int?
+  survey_date                                                        DateTime?             @db.Date
+  survey_time                                                        DateTime?             @db.Time(6)
+  storage_start_date                                                 DateTime?             @db.Date
+  storage_end_date                                                   DateTime?             @db.Date
+  pick_and_pack                                                      Boolean               @default(false)
+  remarks                                                            String?
+  status_id                                                          Int
+  created_at                                                         DateTime              @default(now()) @db.Timestamptz(6)
+  created_by                                                         BigInt?
+  updated_at                                                         DateTime              @default(now()) @db.Timestamptz(6)
+  updated_by                                                         BigInt?
+  deleted_at                                                         DateTime?             @db.Timestamptz(6)
+  deleted_by                                                         BigInt?
+  row_version                                                        Int                   @default(1)
+  contacted_by_profile_id                                            BigInt?
+  contacted_at                                                       DateTime?             @db.Timestamptz(6)
+  drop_reason_id                                                     Int?
+  drop_remark                                                        String?               @db.VarChar(2000)
+  dropped_at                                                         DateTime?             @db.Timestamptz(6)
+  dropped_by                                                         BigInt?
+  stage_id                                                           Int
+  customer_profile_id                                                BigInt?
+  profile                                                            profile?              @relation(fields: [contacted_by_profile_id], references: [profile_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_contacted_by")
+  customer                                                           customer              @relation(fields: [customer_id], references: [customer_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_customer_id")
+  profile_service_request_customer_profile_idToprofile               profile?              @relation("service_request_customer_profile_idToprofile", fields: [customer_profile_id], references: [profile_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_customer_profile_id")
+  parameter_service_request_drop_reason_idToparameter                parameter?            @relation("service_request_drop_reason_idToparameter", fields: [drop_reason_id], references: [parameter_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_drop_reason_id")
+  app_user                                                           app_user?             @relation(fields: [dropped_by], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_dropped_by")
+  parameter_service_request_enquiry_channel_idToparameter            parameter?            @relation("service_request_enquiry_channel_idToparameter", fields: [enquiry_channel_id], references: [parameter_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_enquiry_channel_id")
+  employee                                                           employee?             @relation(fields: [executive_profile_id], references: [profile_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_executive")
+  address_service_request_from_address_idToaddress                   address?              @relation("service_request_from_address_idToaddress", fields: [from_address_id], references: [address_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_from_address_id")
+  parameter_service_request_international_service_type_idToparameter parameter?            @relation("service_request_international_service_type_idToparameter", fields: [international_service_type_id], references: [parameter_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_intl_service_type_id")
+  organization                                                       organization          @relation(fields: [organization_id], references: [organization_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_organization_id")
+  parameter_service_request_referral_idToparameter                   parameter?            @relation("service_request_referral_idToparameter", fields: [referral_id], references: [parameter_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_referral_id")
+  parameter_service_request_residence_type_idToparameter             parameter?            @relation("service_request_residence_type_idToparameter", fields: [residence_type_id], references: [parameter_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_residence_type_id")
+  service_group                                                      service_group         @relation(fields: [service_group_id], references: [service_group_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_service_group_id")
+  service_type                                                       service_type          @relation(fields: [service_type_id], references: [service_type_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_service_type_id")
+  parameter_service_request_stage_idToparameter                      parameter             @relation("service_request_stage_idToparameter", fields: [stage_id], references: [parameter_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_stage_id")
+  parameter_service_request_status_idToparameter                     parameter             @relation("service_request_status_idToparameter", fields: [status_id], references: [parameter_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_status_id")
+  parameter_service_request_survey_type_idToparameter                parameter?            @relation("service_request_survey_type_idToparameter", fields: [survey_type_id], references: [parameter_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_survey_type_id")
+  address_service_request_to_address_idToaddress                     address?              @relation("service_request_to_address_idToaddress", fields: [to_address_id], references: [address_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_to_address_id")
+  service_request_log                                                service_request_log[]
+  survey                                                             survey?
+
+  @@index([customer_id], map: "ix_service_request_customer")
+  @@index([service_group_id], map: "ix_service_request_group")
+  @@index([status_id], map: "ix_service_request_status")
+  @@index([stage_id], map: "ix_service_request_stage")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model customer_profile {
+  customer_profile_id                            BigInt    @id(map: "pk_customer_profile") @default(autoincrement())
+  customer_id                                    BigInt
+  profile_id                                     BigInt
+  is_master                                      Boolean   @default(false)
+  created_at                                     DateTime  @default(now()) @db.Timestamptz(6)
+  created_by                                     BigInt?
+  updated_at                                     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_by                                     BigInt?
+  deleted_at                                     DateTime? @db.Timestamptz(6)
+  deleted_by                                     BigInt?
+  app_user_customer_profile_created_byToapp_user app_user? @relation("customer_profile_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_customer_profile_created_by")
+  customer                                       customer  @relation(fields: [customer_id], references: [customer_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_customer_profile_customer_id")
+  app_user_customer_profile_deleted_byToapp_user app_user? @relation("customer_profile_deleted_byToapp_user", fields: [deleted_by], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_customer_profile_deleted_by")
+  profile                                        profile   @relation(fields: [profile_id], references: [profile_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_customer_profile_profile_id")
+  app_user_customer_profile_updated_byToapp_user app_user? @relation("customer_profile_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_customer_profile_updated_by")
+
+  @@unique([customer_id, profile_id], map: "uq_customer_profile")
+  @@index([profile_id], map: "ix_customer_profile_profile_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model document {
+  document_id                            BigInt        @id(map: "pk_document") @default(autoincrement())
+  profile_id                             BigInt?
+  customer_id                            BigInt?
+  company_id                             BigInt?
+  document_type_id                       Int
+  document_number                        String?       @db.VarChar(80)
+  issue_date                             DateTime?     @db.Date
+  expiry_date                            DateTime?     @db.Date
+  file_id                                BigInt?
+  is_verified                            Boolean       @default(false)
+  is_current                             Boolean       @default(true)
+  notes                                  String?
+  created_at                             DateTime      @default(now()) @db.Timestamptz(6)
+  created_by                             BigInt?
+  updated_at                             DateTime      @default(now()) @db.Timestamptz(6)
+  updated_by                             BigInt?
+  deleted_at                             DateTime?     @db.Timestamptz(6)
+  deleted_by                             BigInt?
+  company                                company?      @relation(fields: [company_id], references: [company_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_document_company_id")
+  app_user_document_created_byToapp_user app_user?     @relation("document_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_document_created_by")
+  customer                               customer?     @relation(fields: [customer_id], references: [customer_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_document_customer_id")
+  app_user_document_deleted_byToapp_user app_user?     @relation("document_deleted_byToapp_user", fields: [deleted_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_document_deleted_by")
+  document_type                          document_type @relation(fields: [document_type_id], references: [document_type_id], onUpdate: NoAction, map: "fk_document_document_type_id")
+  file_object                            file_object?  @relation(fields: [file_id], references: [file_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_document_file_id")
+  profile                                profile?      @relation(fields: [profile_id], references: [profile_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_document_profile_id")
+  app_user_document_updated_byToapp_user app_user?     @relation("document_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_document_updated_by")
+
+  @@index([company_id], map: "ix_document_company_id")
+  @@index([customer_id], map: "ix_document_customer_id")
+  @@index([document_type_id], map: "ix_document_document_type_id")
+  @@index([file_id], map: "ix_document_file_id")
+  @@index([profile_id], map: "ix_document_profile_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model document_type {
+  document_type_id                            Int        @id(map: "pk_document_type") @default(autoincrement())
+  code                                        String     @unique(map: "uq_document_type_code") @db.VarChar(40)
+  name                                        String     @db.VarChar(150)
+  category_id                                 Int
+  applies_to                                  String     @default("ANY") @db.VarChar(15)
+  requires_number                             Boolean    @default(false)
+  requires_expiry                             Boolean    @default(false)
+  requires_file                               Boolean    @default(true)
+  expiry_alert_days                           Int?       @db.SmallInt
+  is_active                                   Boolean    @default(true)
+  display_order                               Int        @default(0) @db.SmallInt
+  created_at                                  DateTime   @default(now()) @db.Timestamptz(6)
+  created_by                                  BigInt?
+  updated_at                                  DateTime   @default(now()) @db.Timestamptz(6)
+  updated_by                                  BigInt?
+  document                                    document[]
+  parameter                                   parameter  @relation(fields: [category_id], references: [parameter_id], onUpdate: NoAction, map: "fk_document_type_category_id")
+  app_user_document_type_created_byToapp_user app_user?  @relation("document_type_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_document_type_created_by")
+  app_user_document_type_updated_byToapp_user app_user?  @relation("document_type_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_document_type_updated_by")
+
+  @@index([category_id], map: "ix_document_type_category_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model service_request_log {
+  log_id                                                  BigInt          @id(map: "pk_service_request_log") @default(autoincrement())
+  service_request_id                                      BigInt
+  action                                                  String          @db.VarChar(20)
+  from_status_id                                          Int?
+  to_status_id                                            Int?
+  remarks                                                 String?         @db.VarChar(2000)
+  created_at                                              DateTime        @default(now()) @db.Timestamptz(6)
+  created_by                                              BigInt?
+  app_user                                                app_user?       @relation(fields: [created_by], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_log_created_by")
+  parameter_service_request_log_from_status_idToparameter parameter?      @relation("service_request_log_from_status_idToparameter", fields: [from_status_id], references: [parameter_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_log_from_status")
+  service_request                                         service_request @relation(fields: [service_request_id], references: [service_request_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_log_request")
+  parameter_service_request_log_to_status_idToparameter   parameter?      @relation("service_request_log_to_status_idToparameter", fields: [to_status_id], references: [parameter_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_request_log_to_status")
+
+  @@index([service_request_id, created_at(sort: Desc)], map: "ix_service_request_log_request")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model survey {
+  survey_id                              BigInt                     @id(map: "pk_survey") @default(autoincrement())
+  public_id                              String                     @unique(map: "uq_survey_public_id") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  service_request_id                     BigInt                     @unique(map: "uq_survey_service_request")
+  surveyed_by_profile_id                 BigInt?
+  surveyed_at                            DateTime?                  @db.Timestamptz(6)
+  scan_file_id                           BigInt?
+  time_to_complete_hours                 Decimal?                   @db.Decimal(6, 2)
+  storage_days                           Int?
+  no_of_days                             Int?
+  people_required                        Int?
+  people_description                     String?                    @db.VarChar(500)
+  packing_material_remarks               String?                    @db.VarChar(2000)
+  insurance_required                     Boolean                    @default(false)
+  insurance_value                        Decimal?                   @db.Decimal(12, 2)
+  remarks                                String?                    @db.VarChar(2000)
+  amount_quoted                          Decimal?                   @db.Decimal(12, 2)
+  quote_instruction                      String?                    @db.VarChar(2000)
+  computed_volume_cft                    Decimal?                   @db.Decimal(12, 3)
+  estimated_volume_cft                   Decimal?                   @db.Decimal(12, 3)
+  version_no                             Int                        @default(0)
+  completed_at                           DateTime?                  @db.Timestamptz(6)
+  completed_by                           BigInt?
+  drop_reason_id                         Int?
+  drop_remark                            String?                    @db.VarChar(2000)
+  dropped_at                             DateTime?                  @db.Timestamptz(6)
+  dropped_by                             BigInt?
+  created_at                             DateTime                   @default(now()) @db.Timestamptz(6)
+  created_by                             BigInt?
+  updated_at                             DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_by                             BigInt?
+  deleted_at                             DateTime?                  @db.Timestamptz(6)
+  deleted_by                             BigInt?
+  row_version                            Int                        @default(1)
+  app_user_survey_completed_byToapp_user app_user?                  @relation("survey_completed_byToapp_user", fields: [completed_by], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_survey_completed_by")
+  app_user_survey_created_byToapp_user   app_user?                  @relation("survey_created_byToapp_user", fields: [created_by], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_survey_created_by")
+  parameter                              parameter?                 @relation(fields: [drop_reason_id], references: [parameter_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_survey_drop_reason")
+  app_user_survey_dropped_byToapp_user   app_user?                  @relation("survey_dropped_byToapp_user", fields: [dropped_by], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_survey_dropped_by")
+  file_doc                               file_doc?                  @relation(fields: [scan_file_id], references: [file_doc_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_survey_scan_file")
+  service_request                        service_request            @relation(fields: [service_request_id], references: [service_request_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_survey_service_request")
+  profile                                profile?                   @relation(fields: [surveyed_by_profile_id], references: [profile_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_survey_surveyed_by")
+  app_user_survey_updated_byToapp_user   app_user?                  @relation("survey_updated_byToapp_user", fields: [updated_by], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_survey_updated_by")
+  survey_special_requisite               survey_special_requisite[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model survey_special_requisite {
+  survey_special_requisite_id BigInt    @id(map: "pk_survey_special_requisite") @default(autoincrement())
+  survey_id                   BigInt
+  requisite_id                Int
+  remark                      String?   @db.VarChar(500)
+  created_at                  DateTime  @default(now()) @db.Timestamptz(6)
+  created_by                  BigInt?
+  app_user                    app_user? @relation(fields: [created_by], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_survey_special_requisite_created_by")
+  parameter                   parameter @relation(fields: [requisite_id], references: [parameter_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_survey_special_requisite_requisite")
+  survey                      survey    @relation(fields: [survey_id], references: [survey_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_survey_special_requisite_survey")
+
+  @@unique([survey_id, requisite_id], map: "uq_survey_special_requisite")
+}
